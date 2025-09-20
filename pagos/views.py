@@ -43,7 +43,13 @@ def crear_pago(request):
 def obtener_estado(request, id_transaccion):
     try:
         transaccion = Transaccion.objects.get(id_externo=id_transaccion)
-        return JsonResponse({'status': transaccion.estado, 'monto': str(transaccion.monto)})
+        return JsonResponse({
+            'status': transaccion.estado,
+            'monto': str(transaccion.monto),
+            'metodo_pago': transaccion.metodo_pago,
+            'referencia': transaccion.referencia_pago,
+            'id_transaccion': transaccion.id_externo
+        })
     except Transaccion.DoesNotExist:
         return JsonResponse({'error': 'Transacción no encontrada'}, status=404)
 
@@ -53,9 +59,23 @@ def formulario_pago(request):
 def estado_pago(request, id_transaccion):
     try:
         transaccion = Transaccion.objects.get(id_externo=id_transaccion)
-        return render(request, 'pagos/estado_pago.html', {
-            'transaccion': transaccion
-        })
+        context = {
+            'transaccion': transaccion,
+            'estado_actual': transaccion.estado
+        }
+        template_name = 'pagos/estado_pago.html'
+        return render(request, template_name, context)
     except Transaccion.DoesNotExist:
-        return JsonResponse({'error': 'Transacción no encontrada'}, status=404)
+        return JsonResponse({
+            'error': 'Transacción no encontrada'
+        }, status=404)
+
+def seleccionar_metodo(request):
+    return render(request, 'pagos/formulario_pago.html')
+
+def transferencia(request):
+    return render(request, 'pagos/transferencia.html')
+
+def billetera(request):
+    return render(request, 'pagos/billetera.html')
 # Create your views here.

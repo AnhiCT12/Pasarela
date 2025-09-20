@@ -9,26 +9,21 @@
 </head>
 <body>
     <div class="container">
-        <h1>Realizar Pago</h1>
+        <h1>Seleccionar Método de Pago</h1>
         
-        <div id="resultado" class="messages error" style="display: none;"></div>
-
-        <form id="pagoForm">
-            <h2>Datos de la Transacción</h2>
-            <label for="monto">Monto:</label>
-            <input type="number" id="monto" name="monto" required min="1" step="0.01">
+        <div class="payment-options">
+            <div class="payment-card" onclick="window.location.href='/pagos/transferencia/'">
+                <img src="{% static 'pagos/img/bank.png' %}" alt="Transferencia">
+                <h3>Transferencia Bancaria</h3>
+                <p>Paga mediante transferencia bancaria desde tu cuenta</p>
+            </div>
             
-            <label for="metodo_pago">Método de Pago:</label>
-            <select id="metodo_pago" name="metodo_pago" required>
-                <option value="TRANSFERENCIA">Transferencia Bancaria</option>
-                <option value="BILLETERA_MOVIL">Billetera Móvil</option>
-            </select>
-
-            <label for="referencia_pago">Número de operación:</label>
-            <input type="text" id="referencia_pago" name="referencia_pago" placeholder="Ej: Número de transferencia o comprobante" required>
-            
-            <button type="submit">Procesar Pago</button>
-        </form>
+            <div class="payment-card" onclick="window.location.href='/pagos/billetera/'">
+                <img src="{% static 'pagos/img/wallet.png' %}" alt="Billetera">
+                <h3>Billetera Móvil</h3>
+                <p>Paga usando tu billetera móvil favorita</p>
+            </div>
+        </div>
     </div>
 
     <!-- Pop-up y Overlay -->
@@ -80,13 +75,18 @@
                 if (response.ok) {
                     showPopup('Pago procesado correctamente', 'success');
                     setTimeout(() => {
-                        window.location.href = `/pagos/estado/${data.id_transaccion}`;
+                        window.location.href = `/pagos/estado-pago/${data.id_transaccion}/`;
                     }, 2000);
                 } else {
                     showPopup(data.error, 'error');
                 }
             } catch (error) {
                 showPopup('Error al procesar el pago', 'error');
+            }
+        });
+    </script>
+</body>
+</html>
             }
         });
     </script>

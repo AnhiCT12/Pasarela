@@ -1,0 +1,111 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transferencia Bancaria</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'pagos/style.css' %}">
+</head>
+<body>
+    <div class="container">
+        <h1>Transferencia Bancaria</h1>
+        
+        <form id="transferenciaForm">
+            <h2>Datos de la Transferencia</h2>
+            
+            <label for="monto">Monto:</label>
+            <input type="number" id="monto" name="monto" required min="1" step="0.01">
+            
+            <label for="banco">Banco:</label>
+            <select id="banco" name="banco" required>
+                <option value="">Seleccione un banco</option>
+                <option value="ITAU">Banco Itaú</option>
+                <option value="BBVA">BBVA</option>
+                <option value="BNF">Banco Nacional de Fomento</option>
+                <option value="VISION">Visión Banco</option>
+                <option value="GNB">Banco GNB</option>
+            </select>
+
+            <div id="tipoCuenta" class="form-group">
+                <label>Tipo de Cuenta:</label>
+                <div class="radio-group">
+                    <input type="radio" id="personal" name="tipo_cuenta" value="personal" checked>
+                    <label for="personal">Personal</label>
+                    <input type="radio" id="empresa" name="tipo_cuenta" value="empresa">
+                    <label for="empresa">Empresa</label>
+                </div>
+            </div>
+
+            <div id="datosPersonales">
+                <label for="titular">Nombre del Titular:</label>
+                <input type="text" id="titular" name="titular" required>
+                
+                <div class="documento-group">
+                    <label for="tipo_doc">Tipo de Documento:</label>
+                    <select id="tipo_doc" name="tipo_doc" required>
+                        <option value="CI">Cédula de Identidad</option>
+                        <option value="RUC">RUC</option>
+                    </select>
+                    
+                    <label for="nro_documento">Número:</label>
+                    <input type="text" id="nro_documento" name="nro_documento" required>
+                </div>
+
+                <label for="nro_cuenta">Número de Cuenta:</label>
+                <input type="text" id="nro_cuenta" name="nro_cuenta" required>
+            </div>
+
+            <button type="submit">Confirmar Transferencia</button>
+            <button type="button" class="button-secondary" onclick="window.location.href='/pagos/'">Volver</button>
+        </form>
+    </div>
+
+    <!-- Pop-up y Overlay -->
+    <div id="overlay" class="overlay"></div>
+    <div id="popup" class="popup">
+        <div id="popup-content" class="popup-content"></div>
+        <button class="popup-close" onclick="closePopup()">Cerrar</button>
+    </div>
+
+    <script>
+        // ...existing popup functions...
+
+        document.getElementById('transferenciaForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = {
+                monto: document.getElementById('monto').value,
+                metodo_pago: 'TRANSFERENCIA',
+                banco: document.getElementById('banco').value,
+                tipo_cuenta: document.querySelector('input[name="tipo_cuenta"]:checked').value,
+                titular: document.getElementById('titular').value,
+                tipo_doc: document.getElementById('tipo_doc').value,
+                nro_documento: document.getElementById('nro_documento').value,
+                nro_cuenta: document.getElementById('nro_cuenta').value
+            };
+            
+            try {
+                const response = await fetch('/pagos/crear/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showPopup('Transferencia registrada correctamente', 'success');
+                    setTimeout(() => {
+                        window.location.href = `/pagos/estado-pago/${data.id_transaccion}/`;
+                    }, 2000);
+                } else {
+                    showPopup(data.error, 'error');
+                }
+            } catch (error) {
+                showPopup('Error al procesar la transferencia', 'error');
+            }
+        });
+    </script>
+</body>
+</html>
