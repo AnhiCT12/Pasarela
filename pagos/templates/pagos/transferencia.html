@@ -48,7 +48,7 @@
                         <option value="RUC">RUC</option>
                     </select>
                     
-                    <label for="nro_documento">Número:</label>
+                    <label for="nro_documento">Número de Documento:</label>
                     <input type="text" id="nro_documento" name="nro_documento" required>
                 </div>
 
@@ -61,11 +61,14 @@
         </form>
     </div>
 
-    <!-- Pop-up y Overlay -->
-    <div id="overlay" class="overlay hidden"></div>
-    <div id="popup" class="popup hidden">
-        <div id="popup-content" class="popup-content"></div>
-        <button class="popup-close" onclick="closePopup()">Cerrar</button>
+    <!-- Nuevo Pop-up System -->
+    <div class="popup-container" id="popupContainer">
+        <div class="popup-box">
+            <div class="popup-message" id="popupMessage"></div>
+            <div class="popup-buttons">
+                <button onclick="hidePopup()">Cerrar</button>
+            </div>
+        </div>
     </div>
 
     <script type="module">
@@ -126,31 +129,25 @@
             }
         });
 
-        // Función para mostrar el pop-up
-        function showPopup(message, type = 'info') {
-            const popupContent = document.getElementById('popup-content');
-            const popupOverlay = document.getElementById('overlay');
-            const popup = document.getElementById('popup');
+        function showPopup(message, type) {
+            const popup = document.getElementById('popupContainer');
+            const messageBox = document.getElementById('popupMessage');
             
-            popupContent.innerText = message;
-            
-            if (type === 'success') {
-                popupContent.style.color = 'green';
-            } else if (type === 'error') {
-                popupContent.style.color = 'red';
-            } else {
-                popupContent.style.color = 'blue';
-            }
-            
-            popupOverlay.classList.remove('hidden');
-            popup.classList.remove('hidden');
+            messageBox.textContent = message;
+            popup.className = `popup-container ${type}`;
+            popup.style.display = 'flex';
         }
 
-        // Función para cerrar el pop-up
-        window.closePopup = function() {
-            document.getElementById('overlay').classList.add('hidden');
-            document.getElementById('popup').classList.add('hidden');
-            document.getElementById('transferenciaForm').reset();
+        function hidePopup() {
+            const popup = document.getElementById('popupContainer');
+            const messageBox = document.getElementById('popupMessage');
+            
+            // Verificar si es un popup de éxito antes de redirigir
+            if (popup.className.includes('success')) {
+                window.location.href = '/pagos/';
+            } else {
+                popup.style.display = 'none';
+            }
         }
 
         document.getElementById('transferenciaForm').addEventListener('submit', async (e) => {
@@ -182,20 +179,22 @@
                 if (!querySnapshot.empty) {
                     const accountData = querySnapshot.docs[0].data();
                     
-                    if (titular !== accountData.titular || tipo_doc !== accountData.tipo_doc || nro_documento !== accountData.nro_documento || tipo_cuenta !== accountData.tipo_cuenta) {
-                        showPopup("Error: Los datos ingresados no coinciden con la cuenta existente. Por favor, verifica tu información.", 'error');
+                    if (titular !== accountData.titular || tipo_doc !== accountData.tipo_doc || 
+                        nro_documento !== accountData.nro_documento || tipo_cuenta !== accountData.tipo_cuenta) {
+                        showPopup("Error: Los datos ingresados no coinciden con la cuenta existente.", 'error');
                         return;
                     }
 
                     showPopup("Transferencia exitosa. Se ha acreditado el dinero a la cuenta.", 'success');
+                    // La redirección ocurrirá cuando el usuario cierre el popup
                 } else {
                     showPopup("La cuenta bancaria no existe. Por favor, verifica los datos.", 'error');
                 }
             } catch (error) {
-                console.error("Error al procesar la transferencia:", error);
                 showPopup("Ocurrió un error. Por favor, intenta de nuevo.", 'error');
             }
         });
     </script>
 </body>
 </html>
+
