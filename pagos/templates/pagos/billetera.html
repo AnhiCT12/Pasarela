@@ -127,7 +127,7 @@
             e.preventDefault();
 
             if (!userId) {
-                showPopup("Autenticando usuario, por favor intenta de nuevo en unos segundos.", 'error');
+                showPopup("Error: Usuario no autenticado. Por favor, recarga la página.", 'error');
                 return;
             }
 
@@ -136,8 +136,21 @@
             const telefono = document.getElementById('telefono').value.trim();
             const ci_number = document.getElementById('ci_number').value.trim();
             
-            if (!monto || !tipo_billetera || !telefono || !ci_number) {
-                showPopup("Por favor, completa todos los campos requeridos.", 'error');
+            // Validaciones de campos
+            if (!monto || monto <= 0) {
+                showPopup("El monto debe ser mayor a 0", 'error');
+                return;
+            }
+            if (!tipo_billetera) {
+                showPopup("Debes seleccionar un tipo de billetera", 'error');
+                return;
+            }
+            if (!telefono || telefono.length < 9) {
+                showPopup("El número de teléfono debe tener al menos 9 dígitos", 'error');
+                return;
+            }
+            if (!ci_number) {
+                showPopup("El número de CI es requerido", 'error');
                 return;
             }
 
@@ -149,13 +162,14 @@
                 const querySnapshot = await getDocs(q);
 
                 if (!querySnapshot.empty) {
-                    showPopup("Pago exitoso. Se ha transferido el monto a la billetera.", 'success');
-                    // La redirección ocurrirá cuando el usuario cierre el popup
+                    showPopup(`¡Pago exitoso! Se ha transferido Gs. ${monto} a la billetera ${tipo_billetera}`, 'success');
+                    document.getElementById('billeteraForm').reset();
                 } else {
-                    showPopup("Error: El número de billetera no existe. Por favor, verifica los datos.", 'error');
+                    showPopup("Error: No se encontró la billetera con los datos proporcionados. Verifica el número de teléfono y CI.", 'error');
                 }
             } catch (error) {
-                showPopup("Ocurrió un error. Por favor, intenta de nuevo.", 'error');
+                console.error("Error en la transacción:", error);
+                showPopup("Error en el proceso de pago. Por favor, intenta nuevamente.", 'error');
             }
         });
     </script>

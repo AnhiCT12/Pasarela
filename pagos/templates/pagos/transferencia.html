@@ -154,7 +154,7 @@
             e.preventDefault();
 
             if (!userId) {
-                showPopup("Autenticando usuario, por favor intenta de nuevo en unos segundos.", 'error');
+                showPopup("Error: Usuario no autenticado. Por favor, recarga la página.", 'error');
                 return;
             }
 
@@ -165,33 +165,55 @@
             const nro_cuenta = document.getElementById('nro_cuenta').value.trim();
             const monto = document.getElementById('monto').value.trim();
             const tipo_cuenta_radio = document.querySelector('input[name="tipo_cuenta"]:checked')?.value;
-            const tipo_cuenta = tipo_cuenta_radio === 'empresa' ? 'Empresa' : tipo_cuenta_radio;
+            const tipo_cuenta = tipo_cuenta_radio === 'empresa' ? 'Empresa' : 'Personal';
             
-            if (!monto || !banco || !titular || !tipo_doc || !nro_documento || !nro_cuenta) {
-                showPopup("Por favor, completa todos los campos requeridos.", 'error');
+            // Validaciones de campos
+            if (!monto || monto <= 0) {
+                showPopup("El monto debe ser mayor a 0", 'error');
+                return;
+            }
+            if (!banco) {
+                showPopup("Debes seleccionar un banco", 'error');
+                return;
+            }
+            if (!titular) {
+                showPopup("El nombre del titular es requerido", 'error');
+                return;
+            }
+            if (!nro_documento) {
+                showPopup("El número de documento es requerido", 'error');
+                return;
+            }
+            if (!nro_cuenta) {
+                showPopup("El número de cuenta es requerido", 'error');
                 return;
             }
 
             try {
-                const q = query(bankAccountsCollection, where("banco", "==", banco), where("nro_cuenta", "==", nro_cuenta));
+                const q = query(bankAccountsCollection, 
+                    where("banco", "==", banco), 
+                    where("nro_cuenta", "==", nro_cuenta));
                 const querySnapshot = await getDocs(q);
 
                 if (!querySnapshot.empty) {
                     const accountData = querySnapshot.docs[0].data();
                     
-                    if (titular !== accountData.titular || tipo_doc !== accountData.tipo_doc || 
-                        nro_documento !== accountData.nro_documento || tipo_cuenta !== accountData.tipo_cuenta) {
-                        showPopup("Error: Los datos ingresados no coinciden con la cuenta existente.", 'error');
+                    if (titular !== accountData.titular || 
+                        tipo_doc !== accountData.tipo_doc || 
+                        nro_documento !== accountData.nro_documento || 
+                        tipo_cuenta !== accountData.tipo_cuenta) {
+                        showPopup("Error: Los datos ingresados no coinciden con la cuenta bancaria registrada", 'error');
                         return;
                     }
 
-                    showPopup("Transferencia exitosa. Se ha acreditado el dinero a la cuenta.", 'success');
-                    // La redirección ocurrirá cuando el usuario cierre el popup
+                    showPopup(`¡Transferencia exitosa! Se han transferido Gs. ${monto} a la cuenta ${nro_cuenta} del banco ${banco}`, 'success');
+                    document.getElementById('transferenciaForm').reset();
                 } else {
-                    showPopup("La cuenta bancaria no existe. Por favor, verifica los datos.", 'error');
+                    showPopup("Error: La cuenta bancaria no existe en nuestros registros", 'error');
                 }
             } catch (error) {
-                showPopup("Ocurrió un error. Por favor, intenta de nuevo.", 'error');
+                console.error("Error en la transacción:", error);
+                showPopup("Error en el proceso de transferencia. Por favor, intenta nuevamente.", 'error');
             }
         });
     </script>
