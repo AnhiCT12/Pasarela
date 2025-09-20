@@ -1,0 +1,94 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulario de Pago</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'pagos/style.css' %}">
+</head>
+<body>
+    <div class="container">
+        <h1>Realizar Pago</h1>
+        
+        <div id="resultado" class="messages error" style="display: none;"></div>
+
+        <form id="pagoForm">
+            <h2>Datos de la Transacción</h2>
+            <label for="monto">Monto:</label>
+            <input type="number" id="monto" name="monto" required min="1" step="0.01">
+            
+            <label for="metodo_pago">Método de Pago:</label>
+            <select id="metodo_pago" name="metodo_pago" required>
+                <option value="TRANSFERENCIA">Transferencia Bancaria</option>
+                <option value="BILLETERA_MOVIL">Billetera Móvil</option>
+            </select>
+
+            <label for="referencia_pago">Número de operación:</label>
+            <input type="text" id="referencia_pago" name="referencia_pago" placeholder="Ej: Número de transferencia o comprobante" required>
+            
+            <button type="submit">Procesar Pago</button>
+        </form>
+    </div>
+
+    <!-- Pop-up y Overlay -->
+    <div id="overlay" class="overlay"></div>
+    <div id="popup" class="popup">
+        <div id="popup-content" class="popup-content"></div>
+        <button class="popup-close" onclick="closePopup()">Cerrar</button>
+    </div>
+
+    <script>
+        function showPopup(message, type) {
+            const popup = document.getElementById('popup');
+            const overlay = document.getElementById('overlay');
+            const content = document.getElementById('popup-content');
+            
+            popup.className = 'popup ' + type;
+            content.textContent = message;
+            
+            popup.style.display = 'block';
+            overlay.style.display = 'block';
+        }
+
+        function closePopup() {
+            const popup = document.getElementById('popup');
+            const overlay = document.getElementById('overlay');
+            
+            popup.style.display = 'none';
+            overlay.style.display = 'none';
+        }
+
+        document.getElementById('pagoForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = {
+                monto: document.getElementById('monto').value,
+                metodo_pago: document.getElementById('metodo_pago').value,
+                referencia_pago: document.getElementById('referencia_pago').value
+            };
+            
+            try {
+                const response = await fetch('/pagos/crear/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showPopup('Pago procesado correctamente', 'success');
+                    setTimeout(() => {
+                        window.location.href = `/pagos/estado/${data.id_transaccion}`;
+                    }, 2000);
+                } else {
+                    showPopup(data.error, 'error');
+                }
+            } catch (error) {
+                showPopup('Error al procesar el pago', 'error');
+            }
+        });
+    </script>
+</body>
+</html>

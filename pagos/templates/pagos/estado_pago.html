@@ -1,0 +1,37 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estado del Pago</title>
+    <link rel="stylesheet" href="{% static 'pagos/style.css' %}">
+</head>
+<body>
+    <div class="container">
+        <h1>Estado de la Transacción</h1>
+        
+        <div class="info-transaccion">
+            <p><strong>ID de Transacción:</strong> {{ transaccion.id_externo }}</p>
+            <p><strong>Estado:</strong> <span id="estado">{{ transaccion.estado }}</span></p>
+            <p><strong>Monto:</strong> ${{ transaccion.monto }}</p>
+        </div>
+    </div>
+
+    <script>
+        async function actualizarEstado() {
+            try {
+                const response = await fetch(`/pagos/estado/${transaccion.id_externo}/`);
+                const data = await response.json();
+                if (response.ok) {
+                    document.getElementById('estado').textContent = data.status;
+                }
+            } catch (error) {
+                console.error('Error al actualizar estado');
+            }
+        }
+
+        setInterval(actualizarEstado, 5000);
+    </script>
+</body>
+</html>
