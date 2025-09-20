@@ -37,16 +37,6 @@
         </form>
     </div>
 
-    <!-- Nuevo Pop-up System -->
-    <div class="popup-container" id="popupContainer">
-        <div class="popup-box">
-            <div class="popup-message" id="popupMessage"></div>
-            <div class="popup-buttons">
-                <button onclick="hidePopup()">Cerrar</button>
-            </div>
-        </div>
-    </div>
-
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -77,7 +67,6 @@
                 console.log("Usuario autenticado. ID:", userId);
             } catch (error) {
                 console.error("Error de autenticación:", error);
-                showPopup("Error de autenticación. Por favor, recarga la página.", 'error');
             }
         }
         
@@ -102,32 +91,11 @@
             }
         });
 
-        function showPopup(message, type) {
-            const popup = document.getElementById('popupContainer');
-            const messageBox = document.getElementById('popupMessage');
-            
-            messageBox.textContent = message;
-            popup.className = `popup-container ${type}`;
-            popup.style.display = 'flex';
-        }
-
-        function hidePopup() {
-            const popup = document.getElementById('popupContainer');
-            const messageBox = document.getElementById('popupMessage');
-            
-            // Verificar si es un popup de éxito antes de redirigir
-            if (popup.className.includes('success')) {
-                window.location.href = '/pagos/';
-            } else {
-                popup.style.display = 'none';
-            }
-        }
-
         document.getElementById('billeteraForm').addEventListener('submit', async (e) => {
             e.preventDefault();
 
             if (!userId) {
-                showPopup("Error: Usuario no autenticado. Por favor, recarga la página.", 'error');
+                console.error("Error: Usuario no autenticado");
                 return;
             }
 
@@ -136,21 +104,8 @@
             const telefono = document.getElementById('telefono').value.trim();
             const ci_number = document.getElementById('ci_number').value.trim();
             
-            // Validaciones de campos
-            if (!monto || monto <= 0) {
-                showPopup("El monto debe ser mayor a 0", 'error');
-                return;
-            }
-            if (!tipo_billetera) {
-                showPopup("Debes seleccionar un tipo de billetera", 'error');
-                return;
-            }
-            if (!telefono || telefono.length < 9) {
-                showPopup("El número de teléfono debe tener al menos 9 dígitos", 'error');
-                return;
-            }
-            if (!ci_number) {
-                showPopup("El número de CI es requerido", 'error');
+            if (!monto || monto <= 0 || !tipo_billetera || !telefono || telefono.length < 9 || !ci_number) {
+                console.error("Error: Campos incompletos o inválidos");
                 return;
             }
 
@@ -162,14 +117,14 @@
                 const querySnapshot = await getDocs(q);
 
                 if (!querySnapshot.empty) {
-                    showPopup(`¡Pago exitoso! Se ha transferido Gs. ${monto} a la billetera ${tipo_billetera}`, 'success');
+                    console.log(`Pago exitoso: Gs. ${monto} transferido a ${tipo_billetera}`);
                     document.getElementById('billeteraForm').reset();
+                    window.location.href = '/pagos/';
                 } else {
-                    showPopup("Error: No se encontró la billetera con los datos proporcionados. Verifica el número de teléfono y CI.", 'error');
+                    console.error("Error: Billetera no encontrada");
                 }
             } catch (error) {
                 console.error("Error en la transacción:", error);
-                showPopup("Error en el proceso de pago. Por favor, intenta nuevamente.", 'error');
             }
         });
     </script>

@@ -61,16 +61,6 @@
         </form>
     </div>
 
-    <!-- Nuevo Pop-up System -->
-    <div class="popup-container" id="popupContainer">
-        <div class="popup-box">
-            <div class="popup-message" id="popupMessage"></div>
-            <div class="popup-buttons">
-                <button onclick="hidePopup()">Cerrar</button>
-            </div>
-        </div>
-    </div>
-
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -101,7 +91,6 @@
                 console.log("Usuario autenticado. ID:", userId);
             } catch (error) {
                 console.error("Error de autenticación:", error);
-                showPopup("Error de autenticación. Por favor, recarga la página.", 'error');
             }
         }
         
@@ -129,32 +118,11 @@
             }
         });
 
-        function showPopup(message, type) {
-            const popup = document.getElementById('popupContainer');
-            const messageBox = document.getElementById('popupMessage');
-            
-            messageBox.textContent = message;
-            popup.className = `popup-container ${type}`;
-            popup.style.display = 'flex';
-        }
-
-        function hidePopup() {
-            const popup = document.getElementById('popupContainer');
-            const messageBox = document.getElementById('popupMessage');
-            
-            // Verificar si es un popup de éxito antes de redirigir
-            if (popup.className.includes('success')) {
-                window.location.href = '/pagos/';
-            } else {
-                popup.style.display = 'none';
-            }
-        }
-
         document.getElementById('transferenciaForm').addEventListener('submit', async (e) => {
             e.preventDefault();
 
             if (!userId) {
-                showPopup("Error: Usuario no autenticado. Por favor, recarga la página.", 'error');
+                console.error("Error: Usuario no autenticado");
                 return;
             }
 
@@ -167,9 +135,41 @@
             const tipo_cuenta_radio = document.querySelector('input[name="tipo_cuenta"]:checked')?.value;
             const tipo_cuenta = tipo_cuenta_radio === 'empresa' ? 'Empresa' : 'Personal';
             
-            // Validaciones de campos
-            if (!monto || monto <= 0) {
-                showPopup("El monto debe ser mayor a 0", 'error');
+            if (!monto || monto <= 0 || !banco || !titular || !nro_documento || !nro_cuenta) {
+                console.error("Error: Campos incompletos o inválidos");
+                return;
+            }
+
+            try {
+                const q = query(bankAccountsCollection, 
+                    where("banco", "==", banco), 
+                    where("nro_cuenta", "==", nro_cuenta));
+                const querySnapshot = await getDocs(q);
+
+                if (!querySnapshot.empty) {
+                    const accountData = querySnapshot.docs[0].data();
+                    
+                    if (titular !== accountData.titular || 
+                        tipo_doc !== accountData.tipo_doc || 
+                        nro_documento !== accountData.nro_documento || 
+                        tipo_cuenta !== accountData.tipo_cuenta) {
+                        console.error("Error: Datos no coinciden con la cuenta registrada");
+                        return;
+                    }
+
+                    console.log(`Transferencia exitosa: Gs. ${monto} a cuenta ${nro_cuenta} del banco ${banco}`);
+                    document.getElementById('transferenciaForm').reset();
+                    window.location.href = '/pagos/';
+                } else {
+                    console.error("Error: Cuenta bancaria no encontrada");
+                }
+            } catch (error) {
+                console.error("Error en la transacción:", error);
+            }
+        });
+    </script>
+</body>
+</html>
                 return;
             }
             if (!banco) {
