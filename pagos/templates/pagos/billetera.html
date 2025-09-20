@@ -28,21 +28,139 @@
             <label for="telefono">Número de Teléfono:</label>
             <input type="tel" id="telefono" name="telefono" required>
 
+            <!-- Nuevo campo para el número de CI -->
+            <label for="ci_number">Número de C.I.:</label>
+            <input type="text" id="ci_number" name="ci_number" required>
+
             <button type="submit">Confirmar Pago</button>
             <button type="button" class="button-secondary" onclick="window.location.href='/pagos/'">Volver</button>
         </form>
     </div>
 
     <!-- Pop-up y Overlay -->
-    <div id="overlay" class="overlay"></div>
-    <div id="popup" class="popup">
+    <div id="overlay" class="overlay hidden"></div>
+    <div id="popup" class="popup hidden">
         <div id="popup-content" class="popup-content"></div>
         <button class="popup-close" onclick="closePopup()">Cerrar</button>
     </div>
 
-    <script>
-        // Similar al script de transferencia.html pero adaptado para billetera
-        // ...existing popup and form handling code...
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        setLogLevel('debug');
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        let userId = null;
+
+        async function authenticateUser() {
+            try {
+                if (initialAuthToken) {
+                    const userCredential = await signInWithCustomToken(auth, initialAuthToken);
+                    userId = userCredential.user.uid;
+                } else {
+                    const userCredential = await signInAnonymously(auth);
+                    userId = userCredential.user.uid;
+                }
+                console.log("Usuario autenticado. ID:", userId);
+            } catch (error) {
+                console.error("Error de autenticación:", error);
+                showPopup("Error de autenticación. Por favor, recarga la página.", 'error');
+            }
+        }
+        
+        window.addEventListener('load', authenticateUser);
+
+        const mobileWalletsCollection = collection(db, `artifacts/${appId}/public/data/mobile-wallets`);
+
+        // Add a test mobile wallet to the database when the app loads
+        window.addEventListener('load', async () => {
+            await authenticateUser();
+            const testWallet = {
+                tipo_billetera: "TIGO",
+                telefono: "0981123456",
+                ci: "1234567",
+                createdAt: new Date()
+            };
+            try {
+                await setDoc(doc(mobileWalletsCollection, `${testWallet.tipo_billetera}-${testWallet.telefono}`), testWallet);
+                console.log("Billetera de prueba añadida.");
+            } catch (error) {
+                console.error("Error al añadir la billetera de prueba:", error);
+            }
+        });
+
+        // Función para mostrar el pop-up
+        function showPopup(message, type = 'info') {
+            const popupContent = document.getElementById('popup-content');
+            const popupOverlay = document.getElementById('overlay');
+            const popup = document.getElementById('popup');
+            
+            popupContent.innerText = message;
+            
+            if (type === 'success') {
+                popupContent.style.color = 'green';
+            } else if (type === 'error') {
+                popupContent.style.color = 'red';
+            } else {
+                popupContent.style.color = 'blue';
+            }
+            
+            popupOverlay.classList.remove('hidden');
+            popup.classList.remove('hidden');
+        }
+
+        // Función para cerrar el pop-up
+        window.closePopup = function() {
+            document.getElementById('overlay').classList.add('hidden');
+            document.getElementById('popup').classList.add('hidden');
+            document.getElementById('billeteraForm').reset();
+        }
+
+        document.getElementById('billeteraForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (!userId) {
+                showPopup("Autenticando usuario, por favor intenta de nuevo en unos segundos.", 'error');
+                return;
+            }
+
+            const monto = document.getElementById('monto').value.trim();
+            const tipo_billetera = document.getElementById('tipo_billetera').value.trim();
+            const telefono = document.getElementById('telefono').value.trim();
+            const ci_number = document.getElementById('ci_number').value.trim();
+            
+            if (!monto || !tipo_billetera || !telefono || !ci_number) {
+                showPopup("Por favor, completa todos los campos requeridos.", 'error');
+                return;
+            }
+
+            try {
+                const q = query(mobileWalletsCollection, 
+                    where("tipo_billetera", "==", tipo_billetera), 
+                    where("telefono", "==", telefono),
+                    where("ci", "==", ci_number));
+                const querySnapshot = await getDocs(q);
+
+                if (!querySnapshot.empty) {
+                    showPopup("Pago exitoso. Se ha transferido el monto a la billetera.", 'success');
+                } else {
+                    showPopup("Error: El número de billetera no existe. Por favor, verifica los datos.", 'error');
+                }
+            } catch (error) {
+                console.error("Error al procesar el pago:", error);
+                showPopup("Ocurrió un error. Por favor, intenta de nuevo.", 'error');
+            }
+        });
     </script>
 </body>
 </html>
