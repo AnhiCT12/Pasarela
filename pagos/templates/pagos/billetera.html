@@ -117,14 +117,27 @@
                 const querySnapshot = await getDocs(q);
 
                 if (!querySnapshot.empty) {
-                    console.log(`Pago exitoso: Gs. ${monto} transferido a ${tipo_billetera}`);
-                    document.getElementById('billeteraForm').reset();
-                    window.location.href = '/pagos/';
+                    // Simular petición a la API para crear la transacción y obtener el código
+                    const response = await fetch('/pagos/crear/', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            monto,
+                            metodo_pago: tipo_billetera,
+                            referencia_pago: telefono
+                        })
+                    });
+                    const data = await response.json();
+                    if (response.ok && data.codigo_operacion) {
+                        showPopup(`Pago exitoso. Código de operación: ${data.codigo_operacion}`, 'success');
+                    } else {
+                        showPopup("Pago exitoso, pero no se pudo generar el código de operación.", 'success');
+                    }
                 } else {
-                    console.error("Error: Billetera no encontrada");
+                    showPopup("Error: El número de billetera no existe. Por favor, verifica los datos.", 'error');
                 }
             } catch (error) {
-                console.error("Error en la transacción:", error);
+                showPopup("Ocurrió un error. Por favor, intenta de nuevo.", 'error');
             }
         });
     </script>

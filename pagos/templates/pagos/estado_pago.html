@@ -11,24 +11,47 @@
     <div class="container">
         <h1>Estado de la Transacción</h1>
         
-        <div class="info-transaccion">
+        <div class="info-transaccion status-info">
             <h2>Detalles del Pago</h2>
-            <p><strong>ID de Transacción:</strong> {{ transaccion.id_externo }}</p>
-            <p><strong>Estado:</strong> 
-                <span id="estado" class="estado-badge estado-{{ transaccion.estado|lower }}" 
-                      data-last-status="{{ transaccion.estado }}">
-                    {{ transaccion.estado }}
-                </span>
-            </p>
-            <p><strong>Monto:</strong> 
-                <span class="monto">
-                    Gs. {{ transaccion.monto|floatformat:2|intcomma }}
-                </span>
-            </p>
-            <p><strong>Método de Pago:</strong> {{ transaccion.metodo_pago }}</p>
-            {% if transaccion.referencia_pago %}
-                <p><strong>Referencia:</strong> {{ transaccion.referencia_pago }}</p>
-            {% endif %}
+            
+            <div class="transaction-details">
+                <p><strong>ID de Transacción:</strong> 
+                    <span class="id-badge">{{ transaccion.id_externo }}</span>
+                </p>
+                
+                <p><strong>Estado:</strong> 
+                    <span id="estado" class="estado-badge estado-{{ transaccion.estado|lower }}" 
+                          data-last-status="{{ transaccion.estado }}">
+                        {{ transaccion.estado }}
+                    </span>
+                </p>
+                
+                <p><strong>Monto:</strong> 
+                    <span class="monto">
+                        Gs. {{ transaccion.monto|floatformat:2|intcomma }}
+                    </span>
+                </p>
+                
+                <p><strong>Método de Pago:</strong> 
+                    <span class="metodo-pago">{{ transaccion.metodo_pago }}</span>
+                </p>
+                
+                {% if transaccion.referencia_pago %}
+                    <p><strong>Referencia:</strong> 
+                        <span class="referencia">{{ transaccion.referencia_pago }}</span>
+                    </p>
+                {% endif %}
+
+                {% if transaccion.codigo_operacion %}
+                    <p><strong>Código de Operación:</strong> 
+                        <span class="codigo-operacion">{{ transaccion.codigo_operacion }}</span>
+                    </p>
+                {% endif %}
+            </div>
+
+            <div class="back-link">
+                <a href="{% url 'pagos:seleccionar_metodo' %}">Realizar otro pago</a>
+            </div>
         </div>
     </div>
 

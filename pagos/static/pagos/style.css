@@ -326,3 +326,42 @@ form button[type="submit"]:hover {
 .popup-buttons button:hover {
     background-color: #1f576e;
 }
+
+/* Estilos adicionales para estado_pago.html */
+.transaction-details {
+    background-color: var(--color-azul-claro);
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+.transaction-details p {
+    margin: 15px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.id-badge {
+    font-family: monospace;
+    background: var(--color-gris-claro);
+    padding: 5px 10px;
+    border-radius: 4px;
+}
+
+.metodo-pago {
+    font-weight: 600;
+    color: var(--color-azul-oscuro);
+}
+
+.referencia, .codigo-operacion {
+    font-family: monospace;
+    font-weight: 500;
+    color: var(--color-azul-oscuro);
+}
+
+/* Ajuste para el badge de estado */
+.estado-badge {
+    min-width: 100px;
+    text-align: center;
+}

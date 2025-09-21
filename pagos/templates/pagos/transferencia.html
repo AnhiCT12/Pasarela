@@ -157,32 +157,32 @@
                         return;
                     }
 
-                    console.log(`Transferencia exitosa: Gs. ${monto} a cuenta ${nro_cuenta} del banco ${banco}`);
-                    document.getElementById('transferenciaForm').reset();
-                    window.location.href = '/pagos/';
+                    // Simular petición a la API para crear la transacción y obtener el código
+                    const response = await fetch('/pagos/crear/', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            monto,
+                            metodo_pago: banco,
+                            referencia_pago: nro_cuenta
+                        })
+                    });
+                    const data = await response.json();
+                    if (response.ok && data.codigo_operacion) {
+                        showPopup(`¡Transferencia exitosa! Código de operación: ${data.codigo_operacion}`, 'success');
+                    } else {
+                        showPopup("¡Transferencia exitosa! Pero no se pudo generar el código de operación.", 'success');
+                    }
                 } else {
-                    console.error("Error: Cuenta bancaria no encontrada");
+                    showPopup("Error: La cuenta bancaria no existe en nuestros registros", 'error');
                 }
             } catch (error) {
-                console.error("Error en la transacción:", error);
+                showPopup("Error en el proceso de transferencia. Por favor, intenta nuevamente.", 'error');
             }
         });
     </script>
 </body>
 </html>
-                return;
-            }
-            if (!banco) {
-                showPopup("Debes seleccionar un banco", 'error');
-                return;
-            }
-            if (!titular) {
-                showPopup("El nombre del titular es requerido", 'error');
-                return;
-            }
-            if (!nro_documento) {
-                showPopup("El número de documento es requerido", 'error');
-                return;
             }
             if (!nro_cuenta) {
                 showPopup("El número de cuenta es requerido", 'error');

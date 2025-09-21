@@ -1,0 +1,4 @@
+# Ignorar archivos de entorno y compilación de Python
+.env
+*.pyc
+__pycache__/
