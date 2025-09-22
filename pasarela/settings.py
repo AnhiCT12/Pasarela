@@ -150,7 +150,7 @@ if not all(PASARELA_CONFIG.values()):
 # Configuración de CORS
 CORS_ALLOW_ALL_ORIGINS = True  # Solo para desarrollo
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:8000",
+    "http://localhost:8081",
     "http://127.0.0.1:8000",
     # Agrega aquí los dominios permitidos en producción
 ]
